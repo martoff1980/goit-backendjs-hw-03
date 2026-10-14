@@ -1,0 +1,60 @@
+# Dependencies
+node_modules/
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# Coverage
+coverage/
+
+# Build output
+dist/
+build/
+
+# Cache
+.cache/
+.parcel-cache/
+.eslintcache
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Temporary files
+tmp/
+temp/
+listing/
+responses/
+SKILL.md
+
+# Optional: local database files
+*.sqlite
+*.sqlite3
+
+# Optional: npm
+.npm/
+
+# Vercel
+.vercel/
+
+# Misc
+*.tgz
+
+# Output folder for generated data
+OutputData/
