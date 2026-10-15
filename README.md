@@ -125,7 +125,7 @@ docker compose up --build
 ## 📖 Swagger / OpenAPI Документація
 
 Інтерактивна документація API доступна після запуску сервера за адресою:  
-👉 **`http://localhost:3000/docs`**
+👉 **`http://localhost:3000/api-docs`**
 
 ---
 
