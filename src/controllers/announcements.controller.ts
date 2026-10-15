@@ -1,7 +1,8 @@
 import { Request, Response } from 'express';
 import { prisma } from '../../prisma/client';
+import { asyncHandler } from '../middleware/asyncHandler';
 
-export const getAnnouncements = async (req: Request, res: Response) => {
+export const getAnnouncements = asyncHandler(async (req: Request, res: Response) => {
 	const { search, sort, page } = req.query as {
 		search?: string;
 		sort?: 'newest' | 'oldest';
@@ -53,9 +54,9 @@ export const getAnnouncements = async (req: Request, res: Response) => {
 			perPage,
 		},
 	});
-};
+});
 
-export const getAnnouncementById = async (req: Request, res: Response) => {
+export const getAnnouncementById = asyncHandler(async (req: Request, res: Response) => {
 	const id = Number(req.params.id);
 
 	const announcement = await prisma.announcement.findUnique({
@@ -77,9 +78,9 @@ export const getAnnouncementById = async (req: Request, res: Response) => {
 	}
 
 	return res.status(200).json(announcement);
-};
+});
 
-export const createAnnouncement = async (req: Request, res: Response) => {
+export const createAnnouncement = asyncHandler(async (req: Request, res: Response) => {
 	const userId = req.user!.id;
 	const { title, description, price, category } = req.body;
 
@@ -104,9 +105,9 @@ export const createAnnouncement = async (req: Request, res: Response) => {
 	});
 
 	return res.status(201).json(announcement);
-};
+});
 
-export const updateAnnouncement = async (req: Request, res: Response) => {
+export const updateAnnouncement = asyncHandler(async (req: Request, res: Response) => {
 	const id = Number(req.params.id);
 	const userId = req.user!.id;
 
@@ -136,9 +137,9 @@ export const updateAnnouncement = async (req: Request, res: Response) => {
 	});
 
 	return res.status(200).json(updated);
-};
+});
 
-export const deleteAnnouncement = async (req: Request, res: Response) => {
+export const deleteAnnouncement = asyncHandler(async (req: Request, res: Response) => {
 	const id = Number(req.params.id);
 	const userId = req.user!.id;
 
@@ -154,4 +155,4 @@ export const deleteAnnouncement = async (req: Request, res: Response) => {
 	await prisma.announcement.delete({ where: { id } });
 
 	return res.status(204).end();
-};
+});

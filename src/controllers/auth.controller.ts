@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import { prisma } from '../../prisma/client';
+import { asyncHandler } from '../middleware/asyncHandler';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'secret';
 const ACCESS_TOKEN_EXPIRES = '15m';
@@ -9,7 +10,11 @@ const REFRESH_TOKEN_EXPIRES_DAYS = 7;
 
 const generateTokens = async (userId: number, username: string) => {
 	const accessToken = jwt.sign({ id: userId, username }, JWT_SECRET, { expiresIn: ACCESS_TOKEN_EXPIRES });
-	const refreshToken = jwt.sign({ id: userId, username }, JWT_SECRET, { expiresIn: `${REFRESH_TOKEN_EXPIRES_DAYS}d` });
+	// Add jwtid with crypto.randomUUID() to guarantee uniqueness even within the same millisecond
+	const refreshToken = jwt.sign({ id: userId, username }, JWT_SECRET, {
+		expiresIn: `${REFRESH_TOKEN_EXPIRES_DAYS}d`,
+		jwtid: crypto.randomUUID(),
+	});
 
 	// Store refresh token in DB with token rotation / replacement
 	await prisma.refreshToken.create({
@@ -22,7 +27,7 @@ const generateTokens = async (userId: number, username: string) => {
 	return { accessToken, refreshToken };
 };
 
-export const register = async (req: Request, res: Response) => {
+export const register = asyncHandler(async (req: Request, res: Response) => {
 	const { username, email, password, name } = req.body;
 
 	const existingUser = await prisma.user.findFirst({
@@ -56,9 +61,9 @@ export const register = async (req: Request, res: Response) => {
 		accessToken,
 		refreshToken,
 	});
-};
+});
 
-export const login = async (req: Request, res: Response) => {
+export const login = asyncHandler(async (req: Request, res: Response) => {
 	const { username, password } = req.body;
 
 	const user = await prisma.user.findUnique({ where: { username } });
@@ -84,9 +89,9 @@ export const login = async (req: Request, res: Response) => {
 		accessToken,
 		refreshToken,
 	});
-};
+});
 
-export const refresh = async (req: Request, res: Response) => {
+export const refresh = asyncHandler(async (req: Request, res: Response) => {
 	const { refreshToken } = req.body;
 
 	try {
@@ -109,17 +114,17 @@ export const refresh = async (req: Request, res: Response) => {
 	} catch (err) {
 		return res.status(401).json({ error: 'Invalid or expired refresh token' });
 	}
-};
+});
 
-export const logout = async (req: Request, res: Response) => {
+export const logout = asyncHandler(async (req: Request, res: Response) => {
 	const userId = req.user?.id;
 	if (userId) {
 		await prisma.refreshToken.deleteMany({ where: { userId } });
 	}
 	return res.status(204).end();
-};
+});
 
-export const getMe = async (req: Request, res: Response) => {
+export const getMe = asyncHandler(async (req: Request, res: Response) => {
 	const userId = req.user?.id;
 	const user = await prisma.user.findUnique({ where: { id: userId } });
 
@@ -134,4 +139,4 @@ export const getMe = async (req: Request, res: Response) => {
 		name: user.name,
 		createdAt: user.createdAt,
 	});
-};
+});
