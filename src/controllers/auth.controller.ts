@@ -76,6 +76,9 @@ export const login = asyncHandler(async (req: Request, res: Response) => {
 		return res.status(401).json({ error: 'Invalid credentials' });
 	}
 
+	// Delete previous refresh tokens for this user upon login as per requirement
+	await prisma.refreshToken.deleteMany({ where: { userId: user.id } });
+
 	// Replace old refresh tokens or add new one
 	const { accessToken, refreshToken } = await generateTokens(user.id, user.username);
 
