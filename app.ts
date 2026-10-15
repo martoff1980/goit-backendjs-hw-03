@@ -12,7 +12,7 @@ app.use(express.json());
 
 // OpenAPI docs
 const openApiDocument = getOpenApiDocumentation();
-app.use('/docs', swaggerUi.serve, swaggerUi.setup(openApiDocument));
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(openApiDocument));
 
 // Routes
 app.use('/auth', authRoutes);
@@ -20,11 +20,11 @@ app.use('/announcements', announcementsRoutes);
 
 // Global error handler
 app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
-  console.error(err);
-  if (err.code === 'P2025') {
-    return res.status(404).json({ error: 'Record not found' });
-  }
-  res.status(500).json({ error: 'Internal server error' });
+	console.error(err);
+	if (err.code === 'P2025') {
+		return res.status(404).json({ error: 'Record not found' });
+	}
+	res.status(500).json({ error: 'Internal server error' });
 });
 
 export default app;
