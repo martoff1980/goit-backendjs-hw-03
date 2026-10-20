@@ -42,6 +42,7 @@ temp/
 listing/
 responses/
 SKILL.md
+SKILL2.md
 
 # Optional: local database files
 *.sqlite
