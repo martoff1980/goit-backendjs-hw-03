@@ -1,6 +1,8 @@
 import { Request, Response } from 'express';
 import { prisma } from '../../prisma/client';
 import { asyncHandler } from '../middleware/asyncHandler';
+import { uploadToCloudinary } from '../utils/cloudinary';
+import logger from '../logger';
 
 export const getAnnouncements = asyncHandler(async (req: Request, res: Response) => {
 	const { search, sort, page } = req.query as {
@@ -83,13 +85,20 @@ export const getAnnouncementById = asyncHandler(async (req: Request, res: Respon
 export const createAnnouncement = asyncHandler(async (req: Request, res: Response) => {
 	const userId = req.user!.id;
 	const { title, description, price, category } = req.body;
+	let imageUrl: string | undefined = undefined;
+
+	if (req.file) {
+		imageUrl = await uploadToCloudinary(req.file.path);
+		logger.info({ imageUrl }, 'Photo uploaded to Cloudinary and local file removed');
+	}
 
 	const announcement = await prisma.announcement.create({
 		data: {
 			title,
 			description,
-			price,
+			price: Number(price),
 			category,
+			imageUrl,
 			userId,
 		},
 		include: {
@@ -103,6 +112,8 @@ export const createAnnouncement = asyncHandler(async (req: Request, res: Respons
 			},
 		},
 	});
+
+	logger.info({ announcementId: announcement.id }, 'Announcement created');
 
 	return res.status(201).json(announcement);
 });
@@ -121,9 +132,19 @@ export const updateAnnouncement = asyncHandler(async (req: Request, res: Respons
 		return res.status(403).json({ error: 'Access denied' });
 	}
 
+	const dataToUpdate: any = { ...req.body };
+	if (dataToUpdate.price) {
+		dataToUpdate.price = Number(dataToUpdate.price);
+	}
+
+	if (req.file) {
+		dataToUpdate.imageUrl = await uploadToCloudinary(req.file.path);
+		logger.info({ imageUrl: dataToUpdate.imageUrl }, 'Photo updated on Cloudinary and local file removed');
+	}
+
 	const updated = await prisma.announcement.update({
 		where: { id },
-		data: req.body,
+		data: dataToUpdate,
 		include: {
 			user: {
 				select: {
@@ -135,6 +156,8 @@ export const updateAnnouncement = asyncHandler(async (req: Request, res: Respons
 			},
 		},
 	});
+
+	logger.info({ announcementId: updated.id }, 'Announcement updated');
 
 	return res.status(200).json(updated);
 });
@@ -153,6 +176,8 @@ export const deleteAnnouncement = asyncHandler(async (req: Request, res: Respons
 	}
 
 	await prisma.announcement.delete({ where: { id } });
+
+	logger.info({ announcementId: id }, 'Announcement deleted');
 
 	return res.status(204).end();
 });

@@ -1,6 +1,7 @@
 FROM node:20-alpine AS builder
 
 WORKDIR /app
+RUN mkdir -p uploads
 
 COPY tsconfig.json ./
 COPY package*.json ./

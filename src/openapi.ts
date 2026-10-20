@@ -27,8 +27,9 @@ const AnnouncementSchema = registry.register(
 		id: z.number(),
 		title: z.string(),
 		description: z.string(),
-		price: z.number(),
+		price: z.coerce.number().positive(),
 		category: z.string(),
+		imageUrl: z.string().nullable().optional(),
 		createdAt: z.string(),
 		updatedAt: z.string(),
 		user: UserSchema,
@@ -226,12 +227,13 @@ registry.registerPath({
 	request: {
 		body: {
 			content: {
-				'application/json': {
+				'multipart/form-data': {
 					schema: z.object({
 						title: z.string().min(5).max(50),
 						description: z.string().min(10),
-						price: z.number().positive(),
+						price: z.coerce.number().positive(),
 						category: z.enum(['sale', 'service', 'job', 'other']),
+						image: z.string().optional().openapi({ type: 'string', format: 'binary', description: 'Файл зображення оголошення' }),
 					}),
 				},
 			},
@@ -258,12 +260,13 @@ registry.registerPath({
 	request: {
 		body: {
 			content: {
-				'application/json': {
+				'multipart/form-data': {
 					schema: z.object({
 						title: z.string().min(5).max(50).optional(),
 						description: z.string().min(10).optional(),
-						price: z.number().positive().optional(),
+						price: z.coerce.number().positive().optional(),
 						category: z.enum(['sale', 'service', 'job', 'other']).optional(),
+						image: z.string().optional().openapi({ type: 'string', format: 'binary', description: 'Новий файл зображення' }),
 					}),
 				},
 			},

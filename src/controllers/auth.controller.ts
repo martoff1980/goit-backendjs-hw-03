@@ -9,9 +9,9 @@ const ACCESS_TOKEN_EXPIRES = '15m';
 const REFRESH_TOKEN_EXPIRES_DAYS = 7;
 
 const generateTokens = async (userId: number, username: string) => {
-	const accessToken = jwt.sign({ id: userId, username }, JWT_SECRET, { expiresIn: ACCESS_TOKEN_EXPIRES });
+	const accessToken = jwt.sign({ id: userId, username, type: 'access' }, JWT_SECRET, { expiresIn: ACCESS_TOKEN_EXPIRES });
 	// Add jwtid with crypto.randomUUID() to guarantee uniqueness even within the same millisecond
-	const refreshToken = jwt.sign({ id: userId, username }, JWT_SECRET, {
+	const refreshToken = jwt.sign({ id: userId, username, type: 'refresh' }, JWT_SECRET, {
 		expiresIn: `${REFRESH_TOKEN_EXPIRES_DAYS}d`,
 		jwtid: crypto.randomUUID(),
 	});

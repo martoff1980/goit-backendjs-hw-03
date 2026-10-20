@@ -1,13 +1,36 @@
+import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
+import helmet from 'helmet';
+import pinoHttp from 'pino-http';
 import swaggerUi from 'swagger-ui-express';
 import authRoutes from './src/routes/auth.routes';
 import announcementsRoutes from './src/routes/announcements.routes';
 import { getOpenApiDocumentation } from './src/openapi';
+import logger from './src/logger';
 
 const app = express();
 
 app.use(cors());
+app.use(helmet());
+app.use(express.json());
+
+const allowedOrigins = process.env.ALLOWED_ORIGINS ? process.env.ALLOWED_ORIGINS.split(',') : [`http://localhost:${process.env.PORT}`];
+
+app.use(
+	cors({
+		origin: (origin, callback) => {
+			if (!origin || allowedOrigins.includes(origin)) {
+				callback(null, true);
+			} else {
+				callback(new Error('Not allowed by CORS'));
+			}
+		},
+		credentials: true,
+	})
+);
+
+app.use(pinoHttp({ logger }));
 app.use(express.json());
 
 // OpenAPI docs
@@ -20,7 +43,10 @@ app.use('/announcements', announcementsRoutes);
 
 // Global error handler
 app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
-	console.error(err);
+	logger.error(err);
+	if (err.type === 'entity.parse.failed') {
+		return res.status(400).json({ error: 'Invalid JSON payload' });
+	}
 	if (err.code === 'P2025') {
 		return res.status(404).json({ error: 'Record not found' });
 	}
