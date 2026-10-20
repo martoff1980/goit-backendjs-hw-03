@@ -1,57 +1,26 @@
-# REST API Дошки Оголошень
+# Announcements Board API (Production Ready)
 
-Чистий JSON API без рендерингу HTML для сервісу оголошень. Реалізований на Node.js, Express, TypeScript та Prisma ORM з повною автентифікацією через JWT (ротація Refresh-токенів) та інтегрованою
-документацією OpenAPI / Swagger.
+Цей проєкт є оновленою та покращеною версією REST API для ![дошки оголошень](https://github.com/martoff1980/goit-backendjs-hw-02) (опис [HW2](README_PREV.md)), підготовленою до використання в
+production-середовищі. Застосунок побудовано на Node.js, Express, Prisma ORM, PostgreSQL та TypeScript із підтримкою JWT-автентифікації, автоматичного логування, завантаження мультимедіа та базового
+тестування.
 
----
-
-## 🚀 Основний функціонал
-
-- **Автентифікація та Авторизація (JWT):**
-
-  - Реєстрація користувача з перевіркою унікальності `username` та `email`.
-  - Хешування паролів за допомогою `bcrypt`.
-  - Вхід у систему з поверненням пари `accessToken` (термін дії 15 хвилин) та `refreshToken` (термін дії 7 днів).
-  - Ротація Refresh-токенів (`/auth/refresh`) для захисту від викрадення.
-  - Безпечний вихід (`/auth/logout`) із видаленням Refresh-токена з бази даних.
-  - Отримання профілю поточного користувача (`/auth/me`).
-
-- **Управління оголошеннями (CRUD):**
-  - Публічний перегляд списку оголошень із фільтрацією (`search`), сортуванням (`newest`, `oldest`) та пагінацією (по 10 записів).
-  - Публічний перегляд детальної інформації про оголошення за ID.
-  - Створення оголошення (тільки для авторизованих користувачів).
-  - Редагування та видалення оголошення (з обов'язковою перевіркою права власності / ownership).
-
----
-
-## 🛠 Технологічний стек
-
-- **Mова:** TypeScript (Node.js)
-- **Фреймворк:** Express.js
-- **ORM:** Prisma
-- **База даних:** PostgreSQL (або SQLite / MySQL залежно від конфігурації)
-- **Валідація:** Zod
-- **Автентифікація:** JWT (jsonwebtoken), bcrypt
-- **Документація:** Swagger UI / OpenAPI (`@asteasolutions/zod-to-openapi`)
-
----
-
-## 📁 Структура проєкту
+## 📁 Оновлена структура проєкту
 
 ```text
-goit-backend-hw-02/
+goit-backend-hw-03/
 ├── prisma/
 │   ├── schema.prisma          # Схема бази даних Prisma (User, RefreshToken, Announcement)
 │   └── client.ts              # Ініціалізація екземпляра PrismaClient
 ├── src/
 │   ├── __tests__/
-│       ├── auth.test.ts                # Тестування автентифікації
+│   │   ├── auth.test.ts                # Тестування автентифікації
 │   │   └── announcements.tests.ts      # Тестування оголошень
 │   ├── controllers/
 │   │   ├── auth.controller.ts          # Контролер автентифікації
 │   │   └── announcements.controller.ts # Контролер оголошень
 │   ├── middleware/
 │   │   ├── authenticate.ts             # Middleware для перевірки JWT
+│   │   ├── upload.ts                   # Middleware для тимчасового збереження файлів у uploads/
 │   │   └── validate.ts                 # Middleware для валідації body/query/params за допомогою Zod
 │   ├── routes/
 │   │   ├── auth.routes.ts              # Маршрути автентифікації
@@ -59,7 +28,11 @@ goit-backend-hw-02/
 │   ├── validators/
 │   │   ├── auth.validator.ts           # Zod-схеми для auth
 │   │   └── announcements.validator.ts  # Zod-схеми для оголошень
+│   ├── utils/
+│   │   └── cloudinary.ts               # Вивантаження фото в хмарне сховище
+│   │
 │   ├── openapi.ts                      # Налаштування та генерація OpenAPI специфікації
+│   ├── logger.ts                       # Налаштування логування
 │   └── index.ts                        # Точка входу (запуск сервера)
 ├── app.ts                              # Конфігурація Express застосунку та роутингу
 ├── .env.example                        # Приклад змінних середовища
@@ -67,110 +40,98 @@ goit-backend-hw-02/
 └── tsconfig.json
 ```
 
----
+## 🚀 Нові можливості та покращення
 
-## ⚙️ Налаштування та запуск
+- **Базова безпека**:
 
-### 1. Клонування репозиторію та встановлення залежностей
+  - **Helmet**: Встановлення безпечних HTTP-заголовків за замовчуванням.
 
-```bash
-git clone goit-backend-hw-02
-cd goit-backend-hw-02
-npm install
-```
+  - **CORS**: Обмеження запитів за допомогою змінної оточення `ALLOWED_ORIGINS`.
 
-### 2. Змінні середовища (`.env`)
+  - **Rate Limiting**: Обмеження кількості запитів на авторизаційні маршрути (`/auth/\*`) — не більше 10 запитів за 15 хвилин з одного IP.
 
-Створіть файл `.env` у корені проєкту та вкажіть відповідні значення:
+- **Логування (`pino` & `pino-http`)**:
+
+  - Централізований модуль логування `src/logger.ts`.
+
+  - Автоматичне логування всіх HTTP-запитів.
+
+  - Детальне логування подій у контролерах (реєстрація, вхід, створення оголошень, завантаження фото).
+
+- **Завантаження фото через Cloudinary**:
+
+  - Підтримка multipart/form-data у маршрутах створення та оновлення оголошень (`POST /announcements` та `PATCH /announcements/:id`).
+
+  - Тимчасове збереження у локальній папці `uploads/` за допомогою `multer` із гарантованим видаленням локального файлу після завантаження на Cloudinary.
+
+- **Тестування (`Vitest`)**:
+
+  - Налаштований тестовий фреймворк `Vitest` для виконання unit та integration тестів.
+
+## 🛠 Змінні оточення (.env)
+
+Створіть або доповніть файл .env наступними параметрами:
 
 ```env
 PORT=3000
-POSTGRES_USER=postgres
-POSTGRES_PASSWORD=postgres
-POSTGRES_DB=announcements_db
-POSTGRES_PORT=5432
 DATABASE_URL="postgresql://postgres:postgres@localhost:5432/announcements_db?schema=public"
-JWT_SECRET="super_secret_jwt_key_here"
+JWT_SECRET="your_jwt_secret_key"
+
+# CORS
+ALLOWED_ORIGINS="http://localhost:5173,http://localhost:3000"
+
+# Cloudinary Credentials
+CLOUDINARY_CLOUD_NAME="your_cloud_name"
+CLOUDINARY_API_KEY="your_api_key"
+CLOUDINARY_API_SECRET="your_api_secret"
 ```
 
-### 3. Міграції бази даних та генерація Prisma Client
+## 📦 Встановлення та запуск
+
+**Локальний запуск (Development)**
+
+### 1. Встановіть залежності:
 
 ```bash
-npm install -D prisma@6 typescript tsx @types/node
-npm install @prisma/client@6 @prisma/adapter-pg dotenv
-npx prisma migrate dev --name init
-npx prisma generate
+npm install -D vitest@^3
+npm install
+npm install multer express-rate-limit
+npm install cloudinary helmet
+npm install pino pino-pretty pino-http
 ```
 
-### 4. Запуск у режимі розробки
+### 2. Застосуйте міграції бази даних:
 
-Для запуску сервера окремо від бази даних PostgreSQL:
+```bash
+npx prisma migrate dev
+```
+
+### 3. Запустіть сервер у режимі розробки:
 
 ```bash
 npm run dev
 ```
 
-### 5. Швидкий запуск через Docker Compose
+## Запуск у Docker Compose
 
-Для запуску сервера разом із базою даних PostgreSQL в ізольованих контейнерах виконати:
+Для підняття контейнерів із бази даних та додатком:
 
 ```bash
 docker compose up --build
 ```
 
-Сервер буде доступний за адресою: `http://localhost:3000`
+## 🧪 Запуск тестів
 
----
+Для виконання тестів Vitest запустіть команду:
 
-## 📖 Swagger / OpenAPI Документація
+```bash
+npm run test
+```
 
-Інтерактивна документація API доступна після запуску сервера за адресою:  
-👉 **`http://localhost:3000/api-docs`**
+## 📖 Документація OpenAPI / Swagger
 
----
+Інтерактивна документація API доступна за адресою:
 
-## 📌 Маршрути API
-
-### **Auth маршрути (`/auth`)**
-
-| Метод  | Маршрут          | Доступ    | Опис                                        |
-| :----- | :--------------- | :-------- | :------------------------------------------ |
-| `POST` | `/auth/register` | Публічний | Реєстрація нового користувача               |
-| `POST` | `/auth/login`    | Публічний | Вхід та отримання токенів                   |
-| `POST` | `/auth/refresh`  | Публічний | Оновлення access токена через refresh token |
-| `POST` | `/auth/logout`   | Захищений | Вихід (інвалідація refresh токена)          |
-| `GET`  | `/auth/me`       | Захищений | Отримання профілю поточного користувача     |
-
-### **Маршрути оголошень (`/announcements`)**
-
-| Метод    | Маршрут              | Доступ    | Опис                                                                      |
-| :------- | :------------------- | :-------- | :------------------------------------------------------------------------ |
-| `GET`    | `/announcements`     | Публічний | Отримання списку оголошень (`?search=`, `?sort=newest\|oldest`, `?page=`) |
-| `GET`    | `/announcements/:id` | Публічний | Отримання оголошення за ID                                                |
-| `POST`   | `/announcements`     | Захищений | Створення нового оголошення                                               |
-| `PATCH`  | `/announcements/:id` | Захищений | Оновлення оголошення (власник)                                            |
-| `DELETE` | `/announcements/:id` | Захищений | Видалення оголошення (власник)                                            |
-
----
-
-## 📝 Правила валідації
-
-### **Реєстрація (`POST /auth/register`)**
-
-- `username`: рядок, 3-30 символів (унікальний)
-- `email`: коректний email (унікальний)
-- `password`: рядок, мінімум 6 символів
-- `name`: рядок, мінімум 2 символів
-
-### **Створення оголошення (`POST /announcements`)**
-
-- `title`: рядок, 5-50 символів
-- `description`: рядок, мінімум 10 символів
-- `price`: число, більше 0
-- `category`: одне з `sale`, `service`, `job`, `other`
-
-## Тестування
-
-### **Створення тестових кейсів**
-
-- [тести](src/__tests__/)
+```bash
+http://localhost:3000/api-docs
+```
