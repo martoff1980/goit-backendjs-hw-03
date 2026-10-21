@@ -3,6 +3,7 @@ import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import { prisma } from '../../prisma/client';
 import { asyncHandler } from '../middleware/asyncHandler';
+import logger from '../logger';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'secret';
 const ACCESS_TOKEN_EXPIRES = '15m';
@@ -51,6 +52,8 @@ export const register = asyncHandler(async (req: Request, res: Response) => {
 
 	const { accessToken, refreshToken } = await generateTokens(user.id, user.username);
 
+	logger.info({ userId: user.id, username: user.username }, 'User registered successfully');
+
 	return res.status(201).json({
 		user: {
 			id: user.id,
@@ -81,6 +84,8 @@ export const login = asyncHandler(async (req: Request, res: Response) => {
 
 	// Replace old refresh tokens or add new one
 	const { accessToken, refreshToken } = await generateTokens(user.id, user.username);
+
+	logger.info({ userId: user.id, username: user.username }, 'User logged in successfully');
 
 	return res.status(200).json({
 		user: {
