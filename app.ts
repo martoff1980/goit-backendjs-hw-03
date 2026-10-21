@@ -11,9 +11,7 @@ import logger from './src/logger';
 
 const app = express();
 
-app.use(cors());
 app.use(helmet());
-app.use(express.json());
 
 const allowedOrigins = process.env.ALLOWED_ORIGINS ? process.env.ALLOWED_ORIGINS.split(',') : [`http://localhost:${process.env.PORT}`];
 
@@ -44,6 +42,9 @@ app.use('/announcements', announcementsRoutes);
 // Global error handler
 app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
 	logger.error(err);
+	if (err.message === 'Not allowed by CORS') {
+		return res.status(403).json({ error: 'Not allowed by CORS' });
+	}
 	if (err.type === 'entity.parse.failed') {
 		return res.status(400).json({ error: 'Invalid JSON payload' });
 	}
