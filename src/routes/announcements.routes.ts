@@ -9,8 +9,8 @@ const router = Router();
 
 router.get('/', validateQuery(getAnnouncementsQuerySchema), getAnnouncements);
 router.get('/:id', validateParams(announcementIdParamSchema), getAnnouncementById);
-router.post('/', authenticate, upload.single('imageUrl'), validateBody(createAnnouncementSchema), createAnnouncement);
-router.patch('/:id', authenticate, upload.single('imageUrl'), validateParams(announcementIdParamSchema), validateBody(updateAnnouncementSchema), updateAnnouncement);
+router.post('/', authenticate, upload.single('image'), validateBody(createAnnouncementSchema), createAnnouncement);
+router.patch('/:id', authenticate, upload.single('image'), validateParams(announcementIdParamSchema), validateBody(updateAnnouncementSchema), updateAnnouncement);
 router.delete('/:id', authenticate, validateParams(announcementIdParamSchema), deleteAnnouncement);
 
 export default router;

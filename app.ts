@@ -8,6 +8,7 @@ import authRoutes from './src/routes/auth.routes';
 import announcementsRoutes from './src/routes/announcements.routes';
 import { getOpenApiDocumentation } from './src/openapi';
 import logger from './src/logger';
+import multer from 'multer';
 
 const app = express();
 
@@ -47,6 +48,9 @@ app.use((err: any, req: express.Request, res: express.Response, next: express.Ne
 	}
 	if (err.type === 'entity.parse.failed') {
 		return res.status(400).json({ error: 'Invalid JSON payload' });
+	}
+	if (err instanceof multer.MulterError || err.code === 'LIMIT_FILE_SIZE' || err.message?.includes('Unexpected field')) {
+		return res.status(400).json({ error: err.message || 'File upload error' });
 	}
 	if (err.code === 'P2025') {
 		return res.status(404).json({ error: 'Record not found' });

@@ -29,7 +29,7 @@ const AnnouncementSchema = registry.register(
 		description: z.string(),
 		price: z.coerce.number().positive(),
 		category: z.string(),
-		imageUrl: z.string().nullable().optional(),
+		image: z.string().nullable().optional(),
 		createdAt: z.string(),
 		updatedAt: z.string(),
 		user: UserSchema,
