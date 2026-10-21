@@ -11,10 +11,10 @@ export const updateAnnouncementSchema = z
 	.object({
 		title: z.string().min(5).max(50).optional(),
 		description: z.string().min(10).optional(),
-		price: z.preprocess((val) => (typeof val === 'string' ? Number(val) : val), z.number().positive()),
+		price: z.preprocess((val) => (typeof val === 'string' ? Number(val) : val), z.number().positive().optional()),
 		category: z.enum(['sale', 'service', 'job', 'other']).optional(),
 	})
-	.refine((data) => Object.keys(data).length > 0, {
+	.refine((data) => Object.keys(data).length > 0 || data.title !== undefined || data.description !== undefined || data.price !== undefined || data.category !== undefined, {
 		message: 'At least one field must be provided for update',
 	});
 
